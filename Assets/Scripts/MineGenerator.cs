@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+[ExecuteInEditMode] // Allows the script to run in edit mode
 public class MineGenerator : MonoBehaviour {
     [Header("Grid Settings")] [SerializeField]
     private int gridWidth = 10;
@@ -15,66 +16,70 @@ public class MineGenerator : MonoBehaviour {
     [SerializeField] private int minRoomLength = 2;
     [SerializeField] private int maxRoomLength = 4;
 
-
     [Header("Room Generation Settings")] [SerializeField]
-    private int minRoomCount = 7; // Minimum number of rooms to generate
+    private int minRoomCount = 7;
 
-    private bool[,] grid; // Tracks which cells have rooms
+    [SerializeField] private int maxRetries = 5000;
+
+    private bool[,] grid;
     private List<Vector2Int> roomList = new List<Vector2Int>();
 
-    private void Start() {
+    public void GenerateMine() {
+        // Initialize the grid and clear previous rooms
         grid = new bool[gridWidth, gridHeight];
-        GenerateMineWithGrowingTree();
-    }
+        roomList.Clear();
 
-    private void GenerateMineWithGrowingTree() {
-        // Start in the center of the grid
+        // Clear previously generated rooms in the scene
+        // Make sure to destroy the generated rooms and all their children
+        foreach (Transform child in transform) {
+            DestroyImmediate(child.gameObject); // Clear previously generated rooms
+        }
+
+        // Start room generation
         Vector2Int startCell = new Vector2Int(gridWidth / 2, gridHeight / 2);
         roomList.Add(startCell);
         grid[startCell.x, startCell.y] = true;
-        CreateRoom(startCell.x, startCell.y); // Initial room
+        CreateRoom(startCell.x, startCell.y);
 
         int roomsPlaced = 1;
+        int retries = 0;
 
-        while (roomsPlaced < minRoomCount && roomList.Count > 0) {
-            // Choose a random cell from the list
+        // Try to place rooms until the desired room count is reached or retries exceed the limit
+        while (roomsPlaced < minRoomCount && retries < maxRetries) {
             Vector2Int currentCell = roomList[Random.Range(0, roomList.Count)];
-
-            // Get available neighbors
-            List<Vector2Int> neighbors = GetValidNeighbors(currentCell);
+            List<Vector2Int> neighbors = GetNeighboringCells(currentCell);
 
             if (neighbors.Count > 0) {
-                // Pick a random neighbor to grow a new room
                 Vector2Int neighbor = neighbors[Random.Range(0, neighbors.Count)];
 
-                if (CreateRoom(neighbor.x, neighbor.y)) // Attempt to place a room
-                {
+                if (CreateRoom(neighbor.x, neighbor.y)) {
                     grid[neighbor.x, neighbor.y] = true;
                     roomList.Add(neighbor);
                     roomsPlaced++;
+                    retries = 0; // Reset retries on successful room placement
                 }
             }
             else {
-                // No valid neighbors left, remove this cell from the list
-                roomList.Remove(currentCell);
+                retries++;
             }
         }
 
         if (roomsPlaced < minRoomCount) {
-            Debug.LogWarning("Minimum room count not reached. Consider increasing grid size.");
+            Debug.LogWarning("Minimum room count not reached. Consider increasing grid size or adjusting parameters.");
         }
     }
 
-    private List<Vector2Int> GetValidNeighbors(Vector2Int cell) {
+    private List<Vector2Int> GetNeighboringCells(Vector2Int cell) {
         List<Vector2Int> neighbors = new List<Vector2Int>();
-
         Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
 
         foreach (Vector2Int direction in directions) {
-            Vector2Int neighbor = cell + direction * 2; // Use a gap of two to allow room sizes
-            if (neighbor.x >= 0 && neighbor.x < gridWidth && neighbor.y >= 0 && neighbor.y < gridHeight &&
-                !grid[neighbor.x, neighbor.y]) {
-                neighbors.Add(neighbor);
+            for (int distance = 1; distance <= 2; distance++) {
+                Vector2Int neighbor = cell + direction * distance;
+                if (neighbor.x >= 0 && neighbor.x < gridWidth && neighbor.y >= 0 && neighbor.y < gridHeight &&
+                    !grid[neighbor.x, neighbor.y]) {
+                    neighbors.Add(neighbor);
+                }
             }
         }
 
@@ -112,8 +117,13 @@ public class MineGenerator : MonoBehaviour {
         Vector3 roomPosition = new Vector3(x * cellSize, 0, y * cellSize);
         GameObject room = new GameObject("Room_" + x + "_" + y);
         room.transform.position = roomPosition;
+        room.transform.parent = transform; // Set the parent to keep the hierarchy clean
 
-        Color color = Random.ColorHSV();
+        Color roomColor = Random.ColorHSV(); // Generate a unique color for each room
+
+        // Create a new material for each room to avoid material sharing
+        Material roomMaterial = new Material(Shader.Find("Standard"));
+        roomMaterial.color = roomColor;
 
         for (int i = 0; i < roomWidth; i++) {
             for (int j = 0; j < roomLength; j++) {
@@ -121,7 +131,7 @@ public class MineGenerator : MonoBehaviour {
                 GameObject tile = GameObject.CreatePrimitive(PrimitiveType.Cube);
 
                 Renderer renderer = tile.GetComponent<Renderer>();
-                renderer.material.color = color;
+                renderer.material = roomMaterial; // Assign the unique material to the tile
 
                 tile.transform.position = tilePosition;
                 tile.transform.localScale = new Vector3(cellSize, 1f, cellSize);

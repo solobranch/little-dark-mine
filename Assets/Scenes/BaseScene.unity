@@ -384,8 +384,8 @@ MonoBehaviour:
   maxRoomWidth: 4
   minRoomLength: 2
   maxRoomLength: 4
-  playerPrefab: {fileID: 0}
   minRoomCount: 7
+  maxRetries: 5000
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
