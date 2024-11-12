@@ -384,7 +384,8 @@ MonoBehaviour:
   maxRoomWidth: 4
   minRoomLength: 2
   maxRoomLength: 4
-  tunnelPrefab: {fileID: 7885763666372883965, guid: a596a022ba0a168458ebb0644f50eefa, type: 3}
+  minRoomCount: 7
+  maxRetries: 5000
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
