@@ -377,15 +377,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e64c1abcb6a3f9c429738746dadc2648, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridWidth: 10
-  gridHeight: 10
+  gridWidth: 50
+  gridHeight: 50
   cellSize: 10
   minRoomWidth: 2
   maxRoomWidth: 4
   minRoomLength: 2
   maxRoomLength: 4
   minRoomCount: 7
-  maxRetries: 5000
+  maxRetries: 1000
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
