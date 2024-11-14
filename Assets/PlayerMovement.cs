@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -8,6 +9,8 @@ public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private float speed;
     [SerializeField] private InputActionReference movementInputAction;
+    [SerializeField] private CinemachineVirtualCamera cam;
+    
     private Controls controls;
 
     private Rigidbody rb;
@@ -48,6 +51,17 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        rb.velocity = new Vector3(movementVector.x * speed, 0, movementVector.y * speed);
+        Vector3 movementSpeed = new Vector3(movementVector.x * speed, 0, movementVector.y * speed);
+        Vector3 direction = transform.TransformDirection(movementSpeed);
+        rb.velocity = new Vector3(direction.x, rb.velocity.y, direction.z);
+        
+        float rotation = cam.GetCinemachineComponent<CinemachinePOV>().m_HorizontalAxis.Value;
+        Debug.Log(rotation);
+        transform.rotation = Quaternion.Euler(0, rotation, 0);
+    }
+
+    private void Update()
+    {
+
     }
 }
