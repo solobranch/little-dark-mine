@@ -56,7 +56,6 @@ public class PlayerMovement : MonoBehaviour
         rb.velocity = new Vector3(direction.x, rb.velocity.y, direction.z);
         
         float rotation = cam.GetCinemachineComponent<CinemachinePOV>().m_HorizontalAxis.Value;
-        Debug.Log(rotation);
         transform.rotation = Quaternion.Euler(0, rotation, 0);
     }
 
